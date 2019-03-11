@@ -1,11 +1,12 @@
 import os
+import re
 import copy
 import xml.etree.ElementTree as ET
 import scipy.misc as misc
 
 INPUT_WIDTH = 4160
 INPUT_HEIGHT = 2340
-OUTPUT_HEIGHT = 300
+OUTPUT_HEIGHT = 512
 
 GAP = INPUT_WIDTH - INPUT_HEIGHT
 
@@ -40,13 +41,6 @@ def crop_image_and_annotation(image_dir, ann_dir, output_image_dir, output_ann_d
     
     for i, img in enumerate(os.listdir(image_dir)):
         
-        """
-        # resize image
-        image_file = os.path.join(image_dir, ann)
-        image = misc.imread(image_file)
-        image = misc.imresize(image, [OUTPUT_HEIGHT, OUTPUT_WIDTH])
-        misc.imsave(os.path.join(output_image_dir, ann), image)
-        """
         ann = img.replace('.jpg', '.xml')
         try:
             tree = ET.parse(os.path.join(ann_dir, ann))
@@ -91,9 +85,11 @@ def crop_image_and_annotation(image_dir, ann_dir, output_image_dir, output_ann_d
             tree.write(os.path.join(output_ann_dir, ann))    
         
         # left and right             
-        elif crops = 'left_right':
+        elif crops == 'left_right':
             left_tree = copy.deepcopy(tree)
+            left_root = left_tree.getroot()
             right_tree = copy.deepcopy(tree)
+            right_root = right_tree.getroot()
             # deal with left image & anno
             for obj in left_tree.findall('object'): 
                 bbox = obj.find('bndbox') 
@@ -103,7 +99,7 @@ def crop_image_and_annotation(image_dir, ann_dir, output_image_dir, output_ann_d
                 xmin = int(bbox.find('xmin').text)
                 xmax = int(bbox.find('xmax').text)
                 if xmin >= INPUT_HEIGHT:
-                    left_tree.remove(obj)
+                    left_root.remove(obj)
                     continue
                 bbox.find('xmin').text = str(round(float(xmin) / SCALE))
                 xmax = min(xmax, INPUT_HEIGHT)
@@ -117,10 +113,10 @@ def crop_image_and_annotation(image_dir, ann_dir, output_image_dir, output_ann_d
                 bbox.find('ymax').text = str(round(float(bbox.find('ymax').text) / SCALE))
                 xmin = int(bbox.find('xmin').text)
                 xmax = int(bbox.find('xmax').text)
-                if xmax <= INPUT_HEIGHT:
-                    right_tree.remove(obj)
+                if xmax <= GAP:
+                    right_root.remove(obj)
                     continue
-                bbox.find('xmax').text = str(round(float(xmax) / SCALE))
+                bbox.find('xmax').text = str(round((float(xmax) - GAP) / SCALE))
                 xmin = max(xmin-GAP, 0)
                 bbox.find('xmin').text = str(round(float(xmin) / SCALE))
             right_tree.write(os.path.join(output_ann_dir, ann.replace('.xml', '_right.xml')))
@@ -133,19 +129,19 @@ if __name__ == '__main__':
     OUTPUT_IMAGE_DIR = 'D:/xgll/dataset/dataset_'+str(OUTPUT_HEIGHT)
     OUTPUT_ANN_DIR = 'D:/xgll/dataset/xml_'+str(OUTPUT_HEIGHT)
     crop_image_and_annotation(INPUT_IMAGE_DIR, INPUT_ANN_DIR, OUTPUT_IMAGE_DIR, OUTPUT_ANN_DIR)
-    
+    """
     trainset_file = 'D:/xgl/trainset.txt'
     valset_file = 'D:/xgl/valset.txt'
     with open(trainset_file.replace('.txt', '_'+str(OUTPUT_HEIGHT)+'.txt'), 'w') as f:
         for line in open(trainset_file, 'r'):
             n = line.strip().strip('.jpg')
-            for name in os.listdir(INPUT_IMAGE_DIR):
+            for name in os.listdir(OUTPUT_IMAGE_DIR):
                 if re.match(n, name):
-                    f.write(n + '\n')
+                    f.write(name.strip('.jpg') + '\n')
     with open(valset_file.replace('.txt', '_'+str(OUTPUT_HEIGHT)+'.txt'), 'w') as f:
         for line in open(valset_file, 'r'):
             n = line.strip().strip('.jpg')
-            for name in os.listdir(INPUT_IMAGE_DIR):
+            for name in os.listdir(OUTPUT_IMAGE_DIR):
                 if re.match(n, name):
-                    f.write(n + '\n')
-    
+                    f.write(name.strip('.jpg') + '\n')
+    """
