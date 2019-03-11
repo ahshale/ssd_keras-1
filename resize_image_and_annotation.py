@@ -18,12 +18,14 @@ def resize_image_and_annotation(image_dir, ann_dir, output_image_dir, output_ann
     
     for i, ann in enumerate(os.listdir(image_dir)):
         
+        """
         # resize image
-        image_file = os.path.join(ORIGIN_IMAGE_DIR, ann)
+        image_file = os.path.join(image_dir, ann)
         image = misc.imread(image_file)
         image = misc.imresize(image, [OUTPUT_HEIGHT, OUTPUT_WIDTH])
         misc.imsave(os.path.join(output_image_dir, ann), image)
-        
+        """
+
         ann = ann.replace('.jpg', '.xml')
         try:
             tree = ET.parse(os.path.join(ann_dir, ann))
@@ -50,7 +52,7 @@ def resize_image_and_annotation(image_dir, ann_dir, output_image_dir, output_ann
                             if 'ymax' in dim.tag:
                                 dim.text = str(round(float(dim.text) / H_SCALE))
 
-        tree.write(os.path.join(output_ann_dir, ann), encoding="utf-8", xml_declaration=True)
+        tree.write(os.path.join(output_ann_dir, ann))
 
 if __name__ == '__main__':
     INPUT_IMAGE_DIR = 'D:/xgl/dataset'
@@ -58,10 +60,11 @@ if __name__ == '__main__':
     OUTPUT_IMAGE_DIR = 'D:/xgll/dataset/dataset_300'
     OUTPUT_ANN_DIR = 'D:/xgll/dataset/xml_300'
     resize_image_and_annotation(INPUT_IMAGE_DIR, INPUT_ANN_DIR, OUTPUT_IMAGE_DIR, OUTPUT_ANN_DIR)
-
+    """
     trainset_file = 'D:/xgl/trainset.txt'
     valset_file = 'D:/xgl/valset.txt'
     for txt_file in [trainset_file, valset_file]:
         with open(txt_file.replace('.txt', '_300.txt'), 'w') as f:
             for line in open(txt_file, 'r'):
                 f.write(line.strip().strip('.jpg') + '\n')
+    """
