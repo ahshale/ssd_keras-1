@@ -10,19 +10,25 @@ OUTPUT_WIDTH = 300
 H_SCALE = INPUT_HEIGHT / OUTPUT_HEIGHT
 W_SCALE = INPUT_WIDTH / OUTPUT_WIDTH
 
+ORIGIN_IMAGE_DIR = 'D:/xgl/dataset'
 
 def resize_image_and_annotation(image_dir, ann_dir, output_image_dir, output_ann_dir):
+
+    for dir in [output_image_dir, output_ann_dir]:
+        if not os.path.exists(dir):
+            os.makedirs(dir)
     
     for i, ann in enumerate(os.listdir(image_dir)[:100]):
         
         # resize image
-        image_file = os.path.join(image_dir, ann)
+        image_file = os.path.join(ORIGIN_IMAGE_DIR, ann)
         image = misc.imread(image_file)
         image = misc.imresize(image, [OUTPUT_HEIGHT, OUTPUT_WIDTH])
-        misc.imsave(os.path.join(output_image_dir, img_name), image)
-
+        misc.imsave(os.path.join(output_image_dir, ann), image)
+        
+        ann = ann.replace('.jpg', '.xml')
         try:
-            tree = ET.parse(ann_dir + ann)
+            tree = ET.parse(os.path.join(ann_dir, ann))
         except Exception as e:
             print(e)
             print('Ignore this bad annotation: ' + ann_dir + ann)
@@ -46,11 +52,11 @@ def resize_image_and_annotation(image_dir, ann_dir, output_image_dir, output_ann
                             if 'ymax' in dim.tag:
                                 dim.text = str(round(float(dim.text) / H_SCALE))
 
-        tree.write(os.path.join(output_ann_dir, ann.replace('.jpg', '.xml')), encoding="utf-8", xml_declaration=True)
+        tree.write(os.path.join(output_ann_dir, ann), encoding="utf-8", xml_declaration=True)
 
 if __name__ == '__main__':
-    INPUT_IMAGE_DIR = 'D:/xgl/trainset'
-    INPUT_ANN_DIR = 'D:/xgl/xml'
-    OUTPUT_IMAGE_DIR = 'D:/xgl/trainset_300' 
-    OUTPUT_ANN_DIR = 'D:/xgl/xml_300'
+    INPUT_IMAGE_DIR = 'D:/xgll/dataset/resized_trainset'
+    INPUT_ANN_DIR = 'D:/xgll/dataset/trainset_xml'
+    OUTPUT_IMAGE_DIR = 'D:/xgll/dataset/trainset_300' 
+    OUTPUT_ANN_DIR = 'D:/xgll/dataset/xml_300'
     resize_image_and_annotation(INPUT_IMAGE_DIR, INPUT_ANN_DIR, OUTPUT_IMAGE_DIR, OUTPUT_ANN_DIR)
